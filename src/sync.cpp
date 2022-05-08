@@ -4,9 +4,25 @@
 
 int syncboardInit(){
     if (gpioInitialise()<0) return -1;
-    gpioSetMode(GPIO_LINE_1, PI_OUTPUT);
-    gpioSetMode(GPIO_LINE_PPS, PI_OUTPUT);
-    gpioSetMode(GPIO_LINE_GPS, PI_OUTPUT);
+
+    gpioSetMode(GPIO_LINE_1,        PI_OUTPUT);
+    gpioSetMode(GPIO_LINE_2,        PI_OUTPUT);
+    gpioSetMode(GPIO_LINE_BTN_LED,  PI_OUTPUT);
+    gpioSetMode(GPIO_LINE_PPS,      PI_OUTPUT);
+    gpioSetMode(GPIO_LINE_8,        PI_OUTPUT);
+    gpioSetMode(GPIO_LINE_9,        PI_OUTPUT);
+    gpioSetMode(GPIO_LINE_10,       PI_OUTPUT);
+    gpioSetMode(GPIO_LINE_11,       PI_OUTPUT);
+    gpioSetMode(GPIO_LINE_12,       PI_OUTPUT);
+    gpioSetMode(GPIO_LINE_13,       PI_OUTPUT);
+    gpioSetMode(GPIO_LINE_GPS,      PI_OUTPUT);
+    gpioSetMode(GPIO_LINE_14,       PI_OUTPUT);
+    gpioSetMode(GPIO_LINE_15,       PI_OUTPUT);
+    gpioSetMode(GPIO_LINE_16,       PI_OUTPUT);
+    gpioSetMode(GPIO_LINE_17,       PI_OUTPUT);
+
+    gpioSetMode(GPIO_LINE_BTN,      PI_INPUT);
+    gpioSetPullUpDown(GPIO_LINE_BTN, PI_PUD_DOWN);
     return 0;
 }
 
@@ -19,6 +35,23 @@ int gpioWavePrepare1sec(int sec_first, int sec_to_prepare){
     gpioWaveAddFreq1sec(GPIO_LINE_PPS,RISING_EDGE,1,0,5);
     gpioWaveAddGprmc(GPIO_LINE_GPS,100*1000,sec_to_prepare,true);
 
+    // if(gpioWaveGetMicros()!=1000000) printf("[ERROR]Signal length not exactly 1 sec\n");
+
+    return gpioWaveCreatePad(50, 50, 0);
+}
+
+int gpioWavePrepare1sec(struct line_config sync_lines[], int line_count, int sec_first, int sec_to_prepare){
+    if(DEBUG_RT) printf("Preparing for %d\n",sec_to_prepare);
+    // if((sec_to_prepare-sec_first)%20==0) gpioWaveAddFreq1sec(gpio_pps,RISING_EDGE,1,0,10);
+    for(int i=0;i<line_count;i++){
+        if(sync_lines[i].enabled && (sec_to_prepare - sec_first) % sync_lines[i].every_n_seconds == 0){
+            gpioWaveAddFreq1sec(sync_lines[i]);
+        }
+    }
+
+    // Lidar Timestamp
+    gpioWaveAddFreq1sec(GPIO_LINE_PPS,RISING_EDGE,1,0,5);
+    gpioWaveAddGprmc(GPIO_LINE_GPS,100*1000,sec_to_prepare,true);
 
     // if(gpioWaveGetMicros()!=1000000) printf("[ERROR]Signal length not exactly 1 sec\n");
 
@@ -139,4 +172,8 @@ int gpioWaveAddFreq1sec(int gpio, int trigger_type, unsigned freq, unsigned offs
     
     gpioWaveAddGeneric(pulse_count, pulses);
     return 0;
+}
+
+int gpioWaveAddFreq1sec(struct line_config lc){
+    return gpioWaveAddFreq1sec(lc.gpio, lc.trigger_type, lc.freq, lc.offset_us, lc.duty_cycle_percent);
 }

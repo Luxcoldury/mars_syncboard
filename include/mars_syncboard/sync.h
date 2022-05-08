@@ -19,7 +19,22 @@
 #define GPIO_LINE_16        18
 #define GPIO_LINE_17        19
 
+#define GP_LINE_COUNT       12
+
+struct line_config{
+    int num;
+    int gpio;
+    int enabled;
+    int trigger_type;
+    unsigned freq;
+    unsigned every_n_seconds;
+    unsigned offset_us;
+    int duty_cycle_percent;
+};
+
 int syncboardInit();
 int gpioWavePrepare1sec(int sec_first, int sec_to_prepare);
+int gpioWavePrepare1sec(struct line_config sync_lines[], int line_count, int sec_first, int sec_to_prepare);
 int gpioWaveAddGprmc(unsigned gpio, unsigned offset, time_t timestamp, int inverted);
 int gpioWaveAddFreq1sec(int gpio, int trigger_type, unsigned freq, unsigned offset_us, int duty_cycle_percent);
+int gpioWaveAddFreq1sec(struct line_config);
