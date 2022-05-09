@@ -40,12 +40,15 @@ int gpioWavePrepare1sec(int sec_first, int sec_to_prepare){
     return gpioWaveCreatePad(50, 50, 0);
 }
 
-int gpioWavePrepare1sec(struct line_config sync_lines[], int line_count, int sec_first, int sec_to_prepare){
+int gpioWavePrepare1sec(struct line_config sync_lines[], int line_count, int sec_first, int sec_to_prepare, bool lines_triggering){
     if(DEBUG_RT) printf("Preparing for %d\n",sec_to_prepare);
     // if((sec_to_prepare-sec_first)%20==0) gpioWaveAddFreq1sec(gpio_pps,RISING_EDGE,1,0,10);
-    for(int i=0;i<line_count;i++){
-        if(sync_lines[i].enabled && (sec_to_prepare - sec_first) % sync_lines[i].every_n_seconds == 0){
-            gpioWaveAddFreq1sec(sync_lines[i]);
+
+    if(lines_triggering){
+        for(int i=0;i<line_count;i++){
+            if(sync_lines[i].enabled && (sec_to_prepare - sec_first) % sync_lines[i].every_n_seconds == 0){
+                gpioWaveAddFreq1sec(sync_lines[i]);
+            }
         }
     }
 

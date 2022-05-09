@@ -24,7 +24,7 @@
 struct line_config{
     int num;
     int gpio;
-    int enabled;
+    bool enabled;
     int trigger_type;
     unsigned freq;
     unsigned every_n_seconds;
@@ -34,7 +34,7 @@ struct line_config{
 
 int syncboardInit();
 int gpioWavePrepare1sec(int sec_first, int sec_to_prepare);
-int gpioWavePrepare1sec(struct line_config sync_lines[], int line_count, int sec_first, int sec_to_prepare);
+int gpioWavePrepare1sec(struct line_config sync_lines[], int line_count, int sec_first, int sec_to_prepare, bool lines_triggering);
 int gpioWaveAddGprmc(unsigned gpio, unsigned offset, time_t timestamp, int inverted);
 int gpioWaveAddFreq1sec(int gpio, int trigger_type, unsigned freq, unsigned offset_us, int duty_cycle_percent);
 int gpioWaveAddFreq1sec(struct line_config);
