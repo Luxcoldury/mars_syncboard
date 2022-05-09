@@ -28,11 +28,11 @@ struct line_config sync_lines[GP_LINE_COUNT]={
 
 int main(int argc, char **argv)
 {
-    ros::init(argc, argv, "test");
+    ros::init(argc, argv, "syncboard");
 
     if(syncboardInit()<0) return -1;
 
-    ros::NodeHandle n("syncboard");
+    ros::NodeHandle n("~");
 
     ros::ServiceServer service_config_line = n.advertiseService("config_line", config_line);
     ros::ServiceServer service_toggle_trigger = n.advertiseService("toggle_trigger", toggle_trigger);
