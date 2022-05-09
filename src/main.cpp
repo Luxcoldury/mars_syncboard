@@ -2,6 +2,7 @@
 #include <ros/ros.h>
 #include <ros/time.h>
 #include <std_msgs/Time.h>
+#include <std_msgs/String.h>
 #include <mars_syncboard/sync.h>
 #include <mars_syncboard/ConfigLine.h>
 #include <mars_syncboard/ToggleTrigger.h>
@@ -10,6 +11,10 @@
 bool config_line(mars_syncboard::ConfigLine::Request  &req, mars_syncboard::ConfigLine::Response &res);
 bool toggle_trigger(mars_syncboard::ToggleTrigger::Request  &req, mars_syncboard::ToggleTrigger::Response &res);
 bool toggle_button_led(mars_syncboard::ToggleButtonLED::Request  &req, mars_syncboard::ToggleButtonLED::Response &res);
+
+void button_callback(int gpio, int level, uint32_t tick);
+
+ros::Publisher pub_btn;
 
 int wid_now, wid_next;
 int sec_first, sec_now, sec_new, micro_now = -1;
@@ -35,7 +40,10 @@ int main(int argc, char **argv)
 {
     ros::init(argc, argv, "syncboard");
 
-    if(syncboardInit()<0) return -1;
+    if(syncboardInit()<0){
+        printf("PIGPIO initialization failed.");
+        return -1;
+    }
 
     ros::NodeHandle n("~");
 
@@ -47,6 +55,10 @@ int main(int argc, char **argv)
         ros::Publisher pub_line_tmp = n.advertise<std_msgs::Time>("line/"+std::to_string(sync_lines[i].num), 1100);
         pub_lines.push_back(pub_line_tmp);
     }
+
+    pub_btn = n.advertise<std_msgs::String>("button", 1000);
+    gpioGlitchFilter(GPIO_LINE_BTN, 300000);
+    gpioSetAlertFunc(GPIO_LINE_BTN, button_callback);
 
     while (!ros::ok())
     {
@@ -246,4 +258,20 @@ bool toggle_button_led(mars_syncboard::ToggleButtonLED::Request  &req,
             break;
     }
     return true;
+}
+
+void button_callback(int gpio, int level, uint32_t tick){
+    std_msgs::String msg;
+    if(gpio == GPIO_LINE_BTN){
+        switch(level){
+            case 0: // falling edge
+                msg.data = "Released";
+                break;
+            case 1: // rising edge
+                msg.data = "Pressed";
+                break;
+        }
+        ROS_INFO("Button %s", msg.data.c_str());
+        pub_btn.publish(msg);
+    }
 }
