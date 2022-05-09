@@ -40,7 +40,7 @@ int gpioWavePrepare1sec(int sec_first, int sec_to_prepare){
     return gpioWaveCreatePad(50, 50, 0);
 }
 
-int gpioWavePrepare1sec(struct line_config sync_lines[], int line_count, int sec_first, int sec_to_prepare, bool lines_triggering){
+int gpioWavePrepare1sec(struct line_config sync_lines[], int line_count, int sec_first, int sec_to_prepare, bool lines_triggering, int btn_led_mode){
     if(DEBUG_RT) printf("Preparing for %d\n",sec_to_prepare);
     // if((sec_to_prepare-sec_first)%20==0) gpioWaveAddFreq1sec(gpio_pps,RISING_EDGE,1,0,10);
 
@@ -50,6 +50,19 @@ int gpioWavePrepare1sec(struct line_config sync_lines[], int line_count, int sec
                 gpioWaveAddFreq1sec(sync_lines[i]);
             }
         }
+    }
+
+    // Button LED
+    switch(btn_led_mode){
+        case BTN_LED_OFF:
+            gpioWrite(GPIO_LINE_BTN_LED,0);
+            break;
+        case BTN_LED_ON:
+            gpioWrite(GPIO_LINE_BTN_LED,1);
+            break;
+        case BTN_LED_BLINK_1HZ:
+            gpioWaveAddFreq1sec(GPIO_LINE_BTN_LED,RISING_EDGE,1,0,5);
+            break;
     }
 
     // Lidar Timestamp

@@ -58,6 +58,7 @@ add_service_files(
   FILES
   ConfigLine.srv
   ToggleTrigger.srv
+  ToggleButtonLED.srv
 )
 
 ## Generate actions in the 'action' folder

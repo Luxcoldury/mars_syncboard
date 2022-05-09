@@ -1,15 +1,20 @@
+// #include <unistd.h>
 #include <ros/ros.h>
-#include <std_msgs/String.h>
+#include <ros/time.h>
+#include <std_msgs/Time.h>
 #include <mars_syncboard/sync.h>
 #include <mars_syncboard/ConfigLine.h>
 #include <mars_syncboard/ToggleTrigger.h>
+#include <mars_syncboard/ToggleButtonLED.h>
 
 bool config_line(mars_syncboard::ConfigLine::Request  &req, mars_syncboard::ConfigLine::Response &res);
 bool toggle_trigger(mars_syncboard::ToggleTrigger::Request  &req, mars_syncboard::ToggleTrigger::Response &res);
+bool toggle_button_led(mars_syncboard::ToggleButtonLED::Request  &req, mars_syncboard::ToggleButtonLED::Response &res);
 
 int wid_now, wid_next;
 int sec_first, sec_now, sec_new, micro_now = -1;
 bool lines_triggering = false;
+int btn_led_mode = BTN_LED_ON;
 
 struct line_config sync_lines[GP_LINE_COUNT]={
     {1,  GPIO_LINE_1,  false},
@@ -36,7 +41,12 @@ int main(int argc, char **argv)
 
     ros::ServiceServer service_config_line = n.advertiseService("config_line", config_line);
     ros::ServiceServer service_toggle_trigger = n.advertiseService("toggle_trigger", toggle_trigger);
-    // ros::Publisher pub = n.advertise<std_msgs::String>("time", 5);
+    
+    std::vector<ros::Publisher> pub_lines;
+    for(int i=0;i<GP_LINE_COUNT;i++){    
+        ros::Publisher pub_line_tmp = n.advertise<std_msgs::Time>("line/"+std::to_string(sync_lines[i].num), 1100);
+        pub_lines.push_back(pub_line_tmp);
+    }
 
     while (!ros::ok())
     {
@@ -48,7 +58,7 @@ int main(int argc, char **argv)
 
     sec_first = sec_now + 1;
     // wid_now = gpioWavePrepare1sec(sec_first, sec_first);
-    wid_now = gpioWavePrepare1sec(sync_lines, GP_LINE_COUNT, sec_first, sec_first, lines_triggering);
+    wid_now = gpioWavePrepare1sec(sync_lines, GP_LINE_COUNT, sec_first, sec_first, false, btn_led_mode);
 
     // Wait for T+0
     do {gpioTime(1, &sec_new, &micro_now);} while (sec_new < sec_first);
@@ -60,24 +70,41 @@ int main(int argc, char **argv)
     while (ros::ok())
     {
 
-        // std_msgs::String str;
-        // str.data = "hello world";
-        // ROS_INFO("%s", str.data.c_str());
-        // pub.publish(str);
+        gpioTime(1, &sec_new, &micro_now);
+        while(micro_now<900000){
+            ros::spinOnce();
+            // ROS_INFO("spin");
+            usleep(10000);
+            gpioTime(1, &sec_new, &micro_now);
+        }
 
-        ros::spinOnce();
+        if (DEBUG_RT) printf("%d.%06d Stop Spin and wait for sending\n\n", sec_new, micro_now);
 
         // wid_next = gpioWavePrepare1sec(sec_first, sec_now + 1);
-        wid_next = gpioWavePrepare1sec(sync_lines, GP_LINE_COUNT, sec_first, sec_now + 1, lines_triggering);
+        wid_next = gpioWavePrepare1sec(sync_lines, GP_LINE_COUNT, sec_first, sec_now + 1, lines_triggering, btn_led_mode);
 
         do {gpioTime(1, &sec_new, &micro_now);} while (sec_new != sec_now + 1);
         gpioWaveTxSend(wid_next, PI_WAVE_MODE_ONE_SHOT);
 
         sec_now = sec_new;
         if (DEBUG_RT) printf("%d.%06d Sent\n\n", sec_now, micro_now);
+        ROS_INFO("Running, %s",lines_triggering ? "Triggering" : "Not Triggering");
 
         gpioWaveDelete(wid_now);
         wid_now = wid_next;
+
+        std_msgs::Time msg_line_tmp;
+
+        for(int i=0;i<GP_LINE_COUNT;i++){
+            if(lines_triggering&&sync_lines[i].enabled){
+                for(int j=0;j<sync_lines[i].freq;j++){
+                    uint32_t us = 1000000/sync_lines[i].freq*j+sync_lines[i].offset_us;
+                    msg_line_tmp.data = ros::Time(sec_now,1000*us);
+                    pub_lines[i].publish(msg_line_tmp);
+                }
+            }
+        }
+        
     }
 
     gpioWaveTxStop();
@@ -198,6 +225,25 @@ bool toggle_trigger(mars_syncboard::ToggleTrigger::Request  &req,
         ROS_INFO("Triggering Started");
     }else{
         ROS_INFO("Triggering Stopped");
+    }
+    return true;
+}
+
+bool toggle_button_led(mars_syncboard::ToggleButtonLED::Request  &req,
+                       mars_syncboard::ToggleButtonLED::Response &res)
+{
+    btn_led_mode = req.mode;
+    res.mode = btn_led_mode;
+    switch(btn_led_mode){
+        case BTN_LED_OFF:
+            ROS_INFO("Button LED: OFF");
+            break;
+        case BTN_LED_ON:
+            ROS_INFO("Button LED: ON");
+            break;
+        case BTN_LED_BLINK_1HZ:
+            ROS_INFO("Button LED: BLINK at 1Hz");
+            break;
     }
     return true;
 }
