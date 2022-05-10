@@ -49,6 +49,7 @@ int main(int argc, char **argv)
 
     ros::ServiceServer service_config_line = n.advertiseService("config_line", config_line);
     ros::ServiceServer service_toggle_trigger = n.advertiseService("toggle_trigger", toggle_trigger);
+    ros::ServiceServer service_toggle_button_led = n.advertiseService("toggle_button_led", toggle_button_led);
     
     std::vector<ros::Publisher> pub_lines;
     for(int i=0;i<GP_LINE_COUNT;i++){    
@@ -57,7 +58,7 @@ int main(int argc, char **argv)
     }
 
     pub_btn = n.advertise<std_msgs::String>("button", 1000);
-    gpioGlitchFilter(GPIO_LINE_BTN, 300000);
+    gpioGlitchFilter(GPIO_LINE_BTN, 100000);
     gpioSetAlertFunc(GPIO_LINE_BTN, button_callback);
 
     while (!ros::ok())
