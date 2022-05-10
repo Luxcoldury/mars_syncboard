@@ -127,16 +127,14 @@ int gpioWaveAddFreq1sec(int gpio, int trigger_type, unsigned freq, unsigned offs
         cycle_length = 1000000 / freq;
     }
 
-    if(offset_us>0){
-        if(trigger_type == FALLING_EDGE){
-            pulses[0].gpioOn  = (1<<gpio);
-            pulses[0].gpioOff = 0;
-            pulses[0].usDelay = offset_us;
-        }else{
-            pulses[0].gpioOn  = 0;
-            pulses[0].gpioOff = (1<<gpio);
-            pulses[0].usDelay = offset_us;
-        }
+    if(trigger_type == FALLING_EDGE){
+        pulses[0].gpioOn  = (1<<gpio);
+        pulses[0].gpioOff = 0;
+        pulses[0].usDelay = offset_us;
+    }else{
+        pulses[0].gpioOn  = 0;
+        pulses[0].gpioOff = (1<<gpio);
+        pulses[0].usDelay = offset_us;
     }
 
     switch(trigger_type){

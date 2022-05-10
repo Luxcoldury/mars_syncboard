@@ -145,7 +145,7 @@ bool config_line(mars_syncboard::ConfigLine::Request  &req,
 
     // Check Triggering mode
     if(!(req.trigger_type == FALLING_EDGE || req.trigger_type == RISING_EDGE || req.trigger_type == EITHER_EDGE)){
-        res_msg = "Trigger type" + std::to_string(req.trigger_type) + "does not exist";
+        res_msg = "Trigger type " + std::to_string(req.trigger_type) + " does not exist";
         goto line_config_failed;
     }
 
