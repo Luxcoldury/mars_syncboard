@@ -1,6 +1,6 @@
 #include <mars_syncboard/pigpio.h>
 
-#define DEBUG_RT false
+#define DEBUG_RT true
 
 #define GPIO_LINE_1         2
 #define GPIO_LINE_2         3
@@ -37,8 +37,8 @@ struct line_config{
 };
 
 int syncboardInit();
-int gpioWavePrepare1sec(int sec_first, int sec_to_prepare);
-int gpioWavePrepare1sec(struct line_config sync_lines[], int line_count, int sec_first, int sec_to_prepare, bool lines_triggering, int btn_led_mode);
+int gpioWavePrepare1sec(int sec_t0, int sec_to_prepare);
+int gpioWavePrepare1sec(struct line_config sync_lines[], int line_count, int sec_t0, int sec_to_prepare, bool lines_triggering, int btn_led_mode);
 int gpioWaveAddGprmc(unsigned gpio, unsigned offset, time_t timestamp, int inverted);
 int gpioWaveAddFreq1sec(int gpio, int trigger_type, unsigned freq, unsigned offset_us, int duty_cycle_percent);
 int gpioWaveAddFreq1sec(struct line_config);

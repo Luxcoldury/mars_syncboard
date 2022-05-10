@@ -17,7 +17,7 @@ void button_callback(int gpio, int level, uint32_t tick);
 ros::Publisher pub_btn;
 
 int wid_now, wid_next;
-int sec_first, sec_now, sec_new, micro_now = -1;
+int sec_now, sec_t0, sec_tn, micro_now, micro_last = -1;
 bool lines_triggering = false;
 int btn_led_mode = BTN_LED_ON;
 
@@ -69,38 +69,42 @@ int main(int argc, char **argv)
     // Wait for T-1
     do {gpioTime(1, &sec_now, &micro_now);} while (micro_now > 500000);
 
-    sec_first = sec_now + 1;
-    // wid_now = gpioWavePrepare1sec(sec_first, sec_first);
-    wid_now = gpioWavePrepare1sec(sync_lines, GP_LINE_COUNT, sec_first, sec_first, false, btn_led_mode);
+    sec_t0 = sec_now + 1;
+    sec_tn = sec_t0;
+    wid_now = gpioWavePrepare1sec(sync_lines, GP_LINE_COUNT, sec_t0, sec_tn, false, btn_led_mode);
 
     // Wait for T+0
-    do {gpioTime(1, &sec_new, &micro_now);} while (sec_new < sec_first);
+    do {gpioTime(1, &sec_now, &micro_now);} while (sec_now < sec_t0);
 
-    gpioWaveTxSend(wid_now, PI_WAVE_MODE_ONE_SHOT);
-    sec_now = sec_new;
-    if (DEBUG_RT) printf("%d.%06d Sent\n\n", sec_now, micro_now);
+    gpioWaveTxSend(wid_now, PI_WAVE_MODE_ONE_SHOT_SYNC);
+    if (DEBUG_RT) printf("%d Sent\n\n", sec_tn);
+
+    micro_last = micro_now;
+    sec_tn ++;
 
     while (ros::ok())
     {
 
-        gpioTime(1, &sec_new, &micro_now);
-        while(micro_now<900000){
+        gpioTime(1, &sec_now, &micro_now);
+        while((micro_now-micro_last+1000000)%1000000<900000){
             ros::spinOnce();
             // ROS_INFO("spin");
             usleep(10000);
-            gpioTime(1, &sec_new, &micro_now);
+            gpioTime(1, &sec_now, &micro_now);
         }
 
-        if (DEBUG_RT) printf("%d.%06d Stop Spin and wait for sending\n\n", sec_new, micro_now);
+        if (DEBUG_RT) printf("%06d Stop Spin and wait for sending\n\n", micro_now-micro_last);
 
-        // wid_next = gpioWavePrepare1sec(sec_first, sec_now + 1);
-        wid_next = gpioWavePrepare1sec(sync_lines, GP_LINE_COUNT, sec_first, sec_now + 1, lines_triggering, btn_led_mode);
+        wid_next = gpioWavePrepare1sec(sync_lines, GP_LINE_COUNT, sec_t0, sec_tn, lines_triggering, btn_led_mode);
 
-        do {gpioTime(1, &sec_new, &micro_now);} while (sec_new != sec_now + 1);
-        gpioWaveTxSend(wid_next, PI_WAVE_MODE_ONE_SHOT);
+        do {gpioTime(1, &sec_now, &micro_now);} while (gpioWaveTxAt()==wid_now);
+        gpioWaveTxSend(wid_next, PI_WAVE_MODE_ONE_SHOT_SYNC);
 
-        sec_now = sec_new;
-        if (DEBUG_RT) printf("%d.%06d Sent\n\n", sec_now, micro_now);
+        if (DEBUG_RT) printf("%d Sent\n\n", sec_tn);
+
+        micro_last = micro_now;
+        sec_tn ++;
+
         ROS_INFO("Running, %s",lines_triggering ? "Triggering" : "Not Triggering");
 
         gpioWaveDelete(wid_now);

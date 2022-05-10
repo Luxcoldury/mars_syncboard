@@ -26,9 +26,9 @@ int syncboardInit(){
     return 0;
 }
 
-int gpioWavePrepare1sec(int sec_first, int sec_to_prepare){
+int gpioWavePrepare1sec(int sec_t0, int sec_to_prepare){
     if(DEBUG_RT) printf("Preparing for %d\n",sec_to_prepare);
-    // if((sec_to_prepare-sec_first)%20==0) gpioWaveAddFreq1sec(gpio_pps,RISING_EDGE,1,0,10);
+    // if((sec_to_prepare-sec_t0)%20==0) gpioWaveAddFreq1sec(gpio_pps,RISING_EDGE,1,0,10);
     gpioWaveAddFreq1sec(GPIO_LINE_1,RISING_EDGE,10,0,50);
 
     // Lidar Timestamp
@@ -40,13 +40,13 @@ int gpioWavePrepare1sec(int sec_first, int sec_to_prepare){
     return gpioWaveCreatePad(50, 50, 0);
 }
 
-int gpioWavePrepare1sec(struct line_config sync_lines[], int line_count, int sec_first, int sec_to_prepare, bool lines_triggering, int btn_led_mode){
+int gpioWavePrepare1sec(struct line_config sync_lines[], int line_count, int sec_t0, int sec_to_prepare, bool lines_triggering, int btn_led_mode){
     if(DEBUG_RT) printf("Preparing for %d\n",sec_to_prepare);
-    // if((sec_to_prepare-sec_first)%20==0) gpioWaveAddFreq1sec(gpio_pps,RISING_EDGE,1,0,10);
+    // if((sec_to_prepare-sec_t0)%20==0) gpioWaveAddFreq1sec(gpio_pps,RISING_EDGE,1,0,10);
 
     if(lines_triggering){
         for(int i=0;i<line_count;i++){
-            if(sync_lines[i].enabled && (sec_to_prepare - sec_first) % sync_lines[i].every_n_seconds == 0){
+            if(sync_lines[i].enabled && (sec_to_prepare - sec_t0) % sync_lines[i].every_n_seconds == 0){
                 gpioWaveAddFreq1sec(sync_lines[i]);
             }
         }
@@ -69,7 +69,7 @@ int gpioWavePrepare1sec(struct line_config sync_lines[], int line_count, int sec
     gpioWaveAddFreq1sec(GPIO_LINE_PPS,RISING_EDGE,1,0,5);
     gpioWaveAddGprmc(GPIO_LINE_GPS,100*1000,sec_to_prepare,true);
 
-    // if(gpioWaveGetMicros()!=1000000) printf("[ERROR]Signal length not exactly 1 sec\n");
+    if(gpioWaveGetMicros()!=1000000) printf("[ERROR]Signal length not exactly 1 sec, micro=%d\n",gpioWaveGetMicros());
 
     return gpioWaveCreatePad(50, 50, 0);
 }
@@ -127,16 +127,14 @@ int gpioWaveAddFreq1sec(int gpio, int trigger_type, unsigned freq, unsigned offs
         cycle_length = 1000000 / freq;
     }
 
-    if(offset_us>0){
-        if(trigger_type == FALLING_EDGE){
-            pulses[0].gpioOn  = (1<<gpio);
-            pulses[0].gpioOff = 0;
-            pulses[0].usDelay = offset_us;
-        }else{
-            pulses[0].gpioOn  = 0;
-            pulses[0].gpioOff = (1<<gpio);
-            pulses[0].usDelay = offset_us;
-        }
+    if(trigger_type == FALLING_EDGE){
+        pulses[0].gpioOn  = (1<<gpio);
+        pulses[0].gpioOff = 0;
+        pulses[0].usDelay = offset_us;
+    }else{
+        pulses[0].gpioOn  = 0;
+        pulses[0].gpioOff = (1<<gpio);
+        pulses[0].usDelay = offset_us;
     }
 
     switch(trigger_type){
