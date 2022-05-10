@@ -163,6 +163,12 @@ bool config_line(mars_syncboard::ConfigLine::Request  &req,
         freq = 1;
     }
 
+    // Check freq against EITHER_EDGE
+    if(req.trigger_type == EITHER_EDGE && freq%2==1){
+        res_msg = "Freq="+std::to_string(req.freq)+"Hz does not work with triggering type EITHER_EDGE";
+        goto line_config_failed;
+    }
+
     // Check duty cycle
     if(req.duty_cycle_percent>=100 || req.duty_cycle_percent <=0){
         res_msg = "Duty cycle should be 1-99 %";
