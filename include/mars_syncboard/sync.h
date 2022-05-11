@@ -1,6 +1,6 @@
 #include <pigpio.h>
 
-#define DEBUG_RT true
+#define DEBUG_RT false
 
 #define GPIO_LINE_1         2
 #define GPIO_LINE_2         3

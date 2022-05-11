@@ -5,10 +5,12 @@
 #include <std_msgs/String.h>
 #include <mars_syncboard/sync.h>
 #include <mars_syncboard/ConfigLine.h>
+#include <mars_syncboard/ConfigGPRMC.h>
 #include <mars_syncboard/ToggleTrigger.h>
 #include <mars_syncboard/ToggleButtonLED.h>
 
 bool config_line(mars_syncboard::ConfigLine::Request  &req, mars_syncboard::ConfigLine::Response &res);
+bool config_gps(mars_syncboard::ConfigGPRMC::Request  &req, mars_syncboard::ConfigGPRMC::Response &res);
 bool toggle_trigger(mars_syncboard::ToggleTrigger::Request  &req, mars_syncboard::ToggleTrigger::Response &res);
 bool toggle_button_led(mars_syncboard::ToggleButtonLED::Request  &req, mars_syncboard::ToggleButtonLED::Response &res);
 
@@ -51,6 +53,7 @@ int main(int argc, char **argv)
     ros::NodeHandle n("~");
 
     ros::ServiceServer service_config_line = n.advertiseService("config_line", config_line);
+    ros::ServiceServer service_config_gps = n.advertiseService("config_gps", config_gps);
     ros::ServiceServer service_toggle_trigger = n.advertiseService("toggle_trigger", toggle_trigger);
     ros::ServiceServer service_toggle_button_led = n.advertiseService("toggle_button_led", toggle_button_led);
     
@@ -283,4 +286,42 @@ void button_callback(int gpio, int level, uint32_t tick){
         ROS_INFO("Button %s", msg.data.c_str());
         pub_btn.publish(msg);
     }
+}
+
+bool config_gps(mars_syncboard::ConfigGPRMC::Request  &req,
+                mars_syncboard::ConfigGPRMC::Response &res)
+{
+    std::string res_msg;
+    int good_baud_rates[7] = {9600,14400,19200,38400,56000,57600,115200};
+
+    for(int i=0;i<7;i++){
+        if(req.baud==good_baud_rates[i]) goto baud_rate_checked;
+    }
+    res_msg = "Baud rate should be (9600,14400,19200,38400,56000,57600,115200)";
+    goto gps_config_failed;
+
+    baud_rate_checked:
+    if(req.offset_us>900000){
+        res_msg = "Offset should be less then 900000us";
+        goto gps_config_failed;
+    }
+
+    gprmc_line.baud = req.baud;
+    gprmc_line.inverted = req.inverted;
+    gprmc_line.offset = req.offset_us;
+
+    res_msg = "GPS Config succeeded.";
+
+    // On success
+    res.succeeded = true;
+    res.msg = res_msg;
+    ROS_INFO("%s",res_msg.c_str());
+    return true;
+
+    // On failure
+    gps_config_failed:
+        res.succeeded = false;
+        res.msg = res_msg;
+        ROS_ERROR("GPS Config failed. %s", res_msg.c_str());
+        return true;
 }

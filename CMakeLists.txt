@@ -57,6 +57,7 @@ find_package(catkin REQUIRED COMPONENTS
 add_service_files(
   FILES
   ConfigLine.srv
+  ConfigGPRMC.srv
   ToggleTrigger.srv
   ToggleButtonLED.srv
 )
