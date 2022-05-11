@@ -36,9 +36,16 @@ struct line_config{
     int duty_cycle_percent;
 };
 
+struct gprmc_config{
+    int gpio;
+    unsigned baud;
+    unsigned offset;
+    bool inverted; 
+};
+
 int syncboardInit();
-int gpioWavePrepare1sec(int sec_first, int sec_to_prepare);
-int gpioWavePrepare1sec(struct line_config sync_lines[], int line_count, int sec_first, int sec_to_prepare, bool lines_triggering, int btn_led_mode);
-int gpioWaveAddGprmc(unsigned gpio, unsigned offset, time_t timestamp, int inverted);
+int gpioWavePrepare1sec(struct line_config sync_lines[], int line_count, struct gprmc_config, int btn_led_mode, int sec_t0, int sec_to_prepare, bool lines_triggering);
+int gpioWaveAddGprmc(unsigned gpio, unsigned baud, unsigned offset, time_t timestamp, int inverted);
+int gpioWaveAddGprmc(struct gprmc_config, time_t timestamp);
 int gpioWaveAddFreq1sec(int gpio, int trigger_type, unsigned freq, unsigned offset_us, int duty_cycle_percent);
 int gpioWaveAddFreq1sec(struct line_config);

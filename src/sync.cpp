@@ -26,23 +26,9 @@ int syncboardInit(){
     return 0;
 }
 
-int gpioWavePrepare1sec(int sec_first, int sec_to_prepare){
+
+int gpioWavePrepare1sec(struct line_config sync_lines[], int line_count, struct gprmc_config gprmc_line, int btn_led_mode, int sec_t0, int sec_to_prepare, bool lines_triggering){
     if(DEBUG_RT) printf("Preparing for %d\n",sec_to_prepare);
-    // if((sec_to_prepare-sec_first)%20==0) gpioWaveAddFreq1sec(gpio_pps,RISING_EDGE,1,0,10);
-    gpioWaveAddFreq1sec(GPIO_LINE_1,RISING_EDGE,10,0,50);
-
-    // Lidar Timestamp
-    gpioWaveAddFreq1sec(GPIO_LINE_PPS,RISING_EDGE,1,0,5);
-    gpioWaveAddGprmc(GPIO_LINE_GPS,100*1000,sec_to_prepare,true);
-
-    // if(gpioWaveGetMicros()!=1000000) printf("[ERROR]Signal length not exactly 1 sec\n");
-
-    return gpioWaveCreatePad(50, 50, 0);
-}
-
-int gpioWavePrepare1sec(struct line_config sync_lines[], int line_count, int sec_first, int sec_to_prepare, bool lines_triggering, int btn_led_mode){
-    if(DEBUG_RT) printf("Preparing for %d\n",sec_to_prepare);
-    // if((sec_to_prepare-sec_first)%20==0) gpioWaveAddFreq1sec(gpio_pps,RISING_EDGE,1,0,10);
 
     if(lines_triggering){
         for(int i=0;i<line_count;i++){
@@ -67,14 +53,14 @@ int gpioWavePrepare1sec(struct line_config sync_lines[], int line_count, int sec
 
     // Lidar Timestamp
     gpioWaveAddFreq1sec(GPIO_LINE_PPS,RISING_EDGE,1,0,5);
-    gpioWaveAddGprmc(GPIO_LINE_GPS,100*1000,sec_to_prepare,true);
+    gpioWaveAddGprmc(gprmc_line, sec_to_prepare);
 
     // if(gpioWaveGetMicros()!=1000000) printf("[ERROR]Signal length not exactly 1 sec\n");
 
     return gpioWaveCreatePad(50, 50, 0);
 }
 
-int gpioWaveAddGprmc(unsigned gpio, unsigned offset, time_t timestamp, int inverted){
+int gpioWaveAddGprmc(unsigned gpio, unsigned baud, unsigned offset, time_t timestamp, int inverted){
 
     char gprmc_raw[59];
     char gprmc[70];
@@ -94,12 +80,16 @@ int gpioWaveAddGprmc(unsigned gpio, unsigned offset, time_t timestamp, int inver
     ROS_DEBUG("GPS serial: %s",gprmc);
 
     if(inverted){
-        gpioWaveAddSerialInverted(gpio,9600,8,2,offset,strlen(gprmc),gprmc);
+        gpioWaveAddSerialInverted(gpio,baud,8,2,offset,strlen(gprmc),gprmc);
     }else{
-        gpioWaveAddSerial(gpio,9600,8,2,offset,strlen(gprmc),gprmc);
+        gpioWaveAddSerial(gpio,baud,8,2,offset,strlen(gprmc),gprmc);
     }
 
     return 0;
+}
+
+int gpioWaveAddGprmc(struct gprmc_config gc, time_t timestamp){
+    return gpioWaveAddGprmc(gc.gpio, gc.baud, gc.offset, timestamp, gc.inverted);
 }
 
 int gpioWaveAddFreq1sec(int gpio, int trigger_type, unsigned freq, unsigned offset_us, int duty_cycle_percent){
