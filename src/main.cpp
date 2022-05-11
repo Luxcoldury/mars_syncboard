@@ -18,8 +18,9 @@ ros::Publisher pub_btn;
 
 int wid_now, wid_next;
 int sec_now, sec_t0, sec_tn, micro_now, micro_last = -1;
-bool lines_triggering = false;
-int btn_led_mode = BTN_LED_ON;
+
+bool lines_triggering   = false;
+int btn_led_mode        = BTN_LED_ON;
 
 struct line_config sync_lines[GP_LINE_COUNT]={
     {1,  GPIO_LINE_1,  false},
@@ -35,6 +36,8 @@ struct line_config sync_lines[GP_LINE_COUNT]={
     {16, GPIO_LINE_16, false},
     {17, GPIO_LINE_17, false}
 };
+
+struct gprmc_config gprmc_line={GPIO_LINE_GPS, 9600, 100*1000, false};
 
 int main(int argc, char **argv)
 {
@@ -71,7 +74,8 @@ int main(int argc, char **argv)
 
     sec_t0 = sec_now + 1;
     sec_tn = sec_t0;
-    wid_now = gpioWavePrepare1sec(sync_lines, GP_LINE_COUNT, sec_t0, sec_tn, false, btn_led_mode);
+    wid_now = gpioWavePrepare1sec(sync_lines, GP_LINE_COUNT, gprmc_line, btn_led_mode, sec_t0, sec_tn, false);
+
 
     // Wait for T+0
     do {gpioTime(1, &sec_now, &micro_now);} while (sec_now < sec_t0);
@@ -95,7 +99,7 @@ int main(int argc, char **argv)
 
         if (DEBUG_RT) printf("%06d Stop Spin and wait for sending\n\n", micro_now-micro_last);
 
-        wid_next = gpioWavePrepare1sec(sync_lines, GP_LINE_COUNT, sec_t0, sec_tn, lines_triggering, btn_led_mode);
+        wid_next = gpioWavePrepare1sec(sync_lines, GP_LINE_COUNT, gprmc_line, btn_led_mode, sec_t0, sec_tn, lines_triggering);
 
         do {gpioTime(1, &sec_now, &micro_now);} while (gpioWaveTxAt()==wid_now);
         gpioWaveTxSend(wid_next, PI_WAVE_MODE_ONE_SHOT_SYNC);
