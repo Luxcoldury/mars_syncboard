@@ -2,11 +2,19 @@
 
 ## How to setup
 
-1. Install [pigpio](http://abyz.me.uk/rpi/pigpio/download.html)
-2. Clone this repo to `catkin_ws/src`
-3. `catkin_make`
+1. Clone this repo to `catkin_ws/src/mars_syncboard`
 
-## How to Run the node
+2. Install the modified version of pigpio.
+
+   ```bash
+   roscd mars_syncboard
+   cd vendors/pigpio
+   sudo make install
+   ```
+
+3. `cd` to `catkin_ws` then `catkin_make`
+
+## How to run the node
 
 *To manipulate GPIOs of raspberry pi, root privileges are required.*
 
@@ -56,12 +64,29 @@ string msg
 
 * `uint8 line_num` : The index of the line to be configured.
 * `bool enabled` : If it is `true`, the line will start triggering after `toggle_trigger true`
-
 * `uint8 trigger_type` : `0` for Rising edge, `1` for Falling edge, `2` for Either edge
 * `float32 freq` : Frequency in Hz. Should be in (0,1000]. When the frequency is lesser than 1Hz, SyncBoard will try to trigger the line every $\lfloor 1/freq \rfloor$ seconds.
 * `uint32 offset_us` : Offset/delay of the signal, in microsecond ($10^{-6}$ second)
-
 * `uint8 duty_cycle_percent` : Duty cycle of the signal, in percentage. If `freq` is less than 1Hz, the width of the signal is `duty_cycle_percent`% of 1 second.
+
+### Service `config_gps`
+
+To configure the signal output on Line GPS.
+
+Request and response of `config_gps` in *Message Description Language* :
+
+```
+uint32 baud
+uint32 offset_us
+bool inverted
+---
+bool succeeded
+string msg
+```
+
+* `uint32 baud` : The baud rate of the GPS time signal. Should be (9600, 14400, 19200, 38400, 56000, 57600, 115200)
+* `uint32 offset_us` :  Offset/delay of the signal, in microsecond ($10^{-6}$ second)
+* `bool inverted` : If it is `true`, the level of the signal will be inverted.
 
 ### Service `toggle_button_led`
 
