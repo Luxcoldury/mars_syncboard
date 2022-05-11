@@ -32,7 +32,7 @@ int gpioWavePrepare1sec(struct line_config sync_lines[], int line_count, struct 
 
     if(lines_triggering){
         for(int i=0;i<line_count;i++){
-            if(sync_lines[i].enabled && (sec_to_prepare - sec_first) % sync_lines[i].every_n_seconds == 0){
+            if(sync_lines[i].enabled && (sec_to_prepare - sec_t0) % sync_lines[i].every_n_seconds == 0){
                 gpioWaveAddFreq1sec(sync_lines[i]);
             }
         }
