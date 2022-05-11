@@ -1,4 +1,4 @@
-#include <mars_syncboard/pigpio.h>
+#include <pigpio.h>
 
 #define DEBUG_RT true
 
