@@ -2,13 +2,14 @@
 
 ## How to setup
 
-1. Clone this repo to `catkin_ws/src/mars_syncboard`
+0. Get and build the service definition package [mars_syncboard_srvs](https://github.com/Luxcoldury/mars_syncboard_srvs)
+
+1. Clone this repo to `catkin_ws/src`
 
 2. Install the modified version of pigpio.
 
    ```bash
-   roscd mars_syncboard
-   cd vendors/pigpio
+   cd mars_syncboard/vendors/pigpio
    sudo make install
    ```
 

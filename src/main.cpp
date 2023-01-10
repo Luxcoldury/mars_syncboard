@@ -4,15 +4,15 @@
 #include <std_msgs/Time.h>
 #include <std_msgs/String.h>
 #include <mars_syncboard/sync.h>
-#include <mars_syncboard/ConfigLine.h>
-#include <mars_syncboard/ConfigGPRMC.h>
-#include <mars_syncboard/ToggleTrigger.h>
-#include <mars_syncboard/ToggleButtonLED.h>
+#include <mars_syncboard_srvs/ConfigLine.h>
+#include <mars_syncboard_srvs/ConfigGPRMC.h>
+#include <mars_syncboard_srvs/ToggleTrigger.h>
+#include <mars_syncboard_srvs/ToggleButtonLED.h>
 
-bool config_line(mars_syncboard::ConfigLine::Request  &req, mars_syncboard::ConfigLine::Response &res);
-bool config_gps(mars_syncboard::ConfigGPRMC::Request  &req, mars_syncboard::ConfigGPRMC::Response &res);
-bool toggle_trigger(mars_syncboard::ToggleTrigger::Request  &req, mars_syncboard::ToggleTrigger::Response &res);
-bool toggle_button_led(mars_syncboard::ToggleButtonLED::Request  &req, mars_syncboard::ToggleButtonLED::Response &res);
+bool config_line(mars_syncboard_srvs::ConfigLine::Request  &req, mars_syncboard_srvs::ConfigLine::Response &res);
+bool config_gps(mars_syncboard_srvs::ConfigGPRMC::Request  &req, mars_syncboard_srvs::ConfigGPRMC::Response &res);
+bool toggle_trigger(mars_syncboard_srvs::ToggleTrigger::Request  &req, mars_syncboard_srvs::ToggleTrigger::Response &res);
+bool toggle_button_led(mars_syncboard_srvs::ToggleButtonLED::Request  &req, mars_syncboard_srvs::ToggleButtonLED::Response &res);
 
 void button_callback(int gpio, int level, uint32_t tick);
 
@@ -129,8 +129,8 @@ int main(int argc, char **argv)
     return 0;
 }
 
-bool config_line(mars_syncboard::ConfigLine::Request  &req,
-                 mars_syncboard::ConfigLine::Response &res)
+bool config_line(mars_syncboard_srvs::ConfigLine::Request  &req,
+                 mars_syncboard_srvs::ConfigLine::Response &res)
 {
     std::string res_msg;
 
@@ -239,8 +239,8 @@ bool config_line(mars_syncboard::ConfigLine::Request  &req,
         return true;
 }
 
-bool toggle_trigger(mars_syncboard::ToggleTrigger::Request  &req,
-                    mars_syncboard::ToggleTrigger::Response &res)
+bool toggle_trigger(mars_syncboard_srvs::ToggleTrigger::Request  &req,
+                    mars_syncboard_srvs::ToggleTrigger::Response &res)
 {
     lines_triggering = req.start_trigger;
     res.triggering = lines_triggering;
@@ -252,8 +252,8 @@ bool toggle_trigger(mars_syncboard::ToggleTrigger::Request  &req,
     return true;
 }
 
-bool toggle_button_led(mars_syncboard::ToggleButtonLED::Request  &req,
-                       mars_syncboard::ToggleButtonLED::Response &res)
+bool toggle_button_led(mars_syncboard_srvs::ToggleButtonLED::Request  &req,
+                       mars_syncboard_srvs::ToggleButtonLED::Response &res)
 {
     btn_led_mode = req.mode;
     res.mode = btn_led_mode;
@@ -287,8 +287,8 @@ void button_callback(int gpio, int level, uint32_t tick){
     }
 }
 
-bool config_gps(mars_syncboard::ConfigGPRMC::Request  &req,
-                mars_syncboard::ConfigGPRMC::Response &res)
+bool config_gps(mars_syncboard_srvs::ConfigGPRMC::Request  &req,
+                mars_syncboard_srvs::ConfigGPRMC::Response &res)
 {
     std::string res_msg;
     int good_baud_rates[7] = {9600,14400,19200,38400,56000,57600,115200};
