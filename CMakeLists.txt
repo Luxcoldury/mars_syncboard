@@ -210,3 +210,4 @@ include_directories(
 
 add_executable(syncboard src/main.cpp src/sync.cpp)
 target_link_libraries(syncboard ${catkin_LIBRARIES} /usr/local/lib/libpigpio.so.1)
+add_dependencies(syncboard mars_syncboard_srvs_generate_messages_cpp)
