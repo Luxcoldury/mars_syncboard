@@ -14,6 +14,6 @@ line:
     duty_cycle_percent: 50
 gps:
   baud: 9600
-  offset_us: 1000000
+  offset_us: 100000
   inverted: false
 led: 2

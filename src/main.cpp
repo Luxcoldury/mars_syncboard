@@ -161,7 +161,7 @@ void update_line_config_param(int line_index){
 
 void update_gps_config_param(){
     nh->setParam("gps/baud", (int)gprmc_line.baud);
-    nh->setParam("gps/offset", (int)gprmc_line.offset);
+    nh->setParam("gps/offset_us", (int)gprmc_line.offset);
     nh->setParam("gps/inverted", gprmc_line.inverted);
 }
 
@@ -221,7 +221,7 @@ bool config_gps_from_param(){
     bool inverted;
 
     nh->param("gps/baud", baud, (int)gprmc_line.baud);
-    nh->param("gps/offset", offset, (int)gprmc_line.offset);
+    nh->param("gps/offset_us", offset, (int)gprmc_line.offset);
     nh->param("gps/inverted", inverted, gprmc_line.inverted);
 
     if(baud==(int)gprmc_line.baud&&
