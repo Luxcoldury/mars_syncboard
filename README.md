@@ -25,6 +25,15 @@
 3. `source devel/setup.bash`
 4. `rosrun mars_syncboard syncboard`
 
+Or if you prefer to use `roslaunch`.
+
+1. `sudo su`
+2. `cd` to `catkin_ws`
+3. `source devel/setup.bash`
+4. `roslaunch mars_syncboard example.launch`
+
+Then you can play with Syncboard by either calling the services or setting params.
+
 ## Services advertised
 
 ### Service `toggle_trigger`
@@ -85,9 +94,9 @@ bool succeeded
 string msg
 ```
 
-* `uint32 baud` : The baud rate of the GPS time signal. Should be (9600, 14400, 19200, 38400, 56000, 57600, 115200)
-* `uint32 offset_us` :  Offset/delay of the signal, in microsecond ($10^{-6}$ second)
-* `bool inverted` : If it is `true`, the level of the signal will be inverted.
+* `uint32 baud` : The baud rate of the GPS time signal. Should be (9600, 14400, 19200, 38400, 56000, 57600, 115200). The default baud rate is 9600.
+* `uint32 offset_us` :  Offset/delay of the GPRMC message compared to the PPS rising edge, in microsecond ($10^{-6}$ second). The default offset is 100ms (100*1000 microseconds).
+* `bool inverted` : If it is `true`, the level of the signal will be inverted. The default setting is `false`.
 
 ### Service `toggle_button_led`
 
@@ -103,15 +112,41 @@ uint8 mode
 
 * `uint8 mode` : `0` for off, `1` for always on, `2` for blinking every 1 second
 
+## Params advertised
+
+ROS Params can be helpful if you want to monitor the triggering status of each line or to configure multiple lines all at once (e.g. in a launch file). However, it is NOT recommended to configure lines on the fly using `rosparam set` since it gives you no error message if your new combination of params doesn't make sense.
+
+Syncboard reads the params once per second and will try to configure the lines according to the params. No matter the configuration succeeded or not, Syncboard will then update the params to reflect the actually configuration of the line. Which means (1) if you want to alter more than one param, better set them at once using `rosparam load`, (2) if the new configuration doesn't make sense, old params will be restored, (3) even if the new configuration does make sense and be applied, the updated params (and the actual triggering setting) may not be identical to your inputs due to rounding.
+
+### Param `line/<line_num>`
+
+There are 5 ROS param for each line: `line/<line_num>/enabled`, `line/<line_num>/trigger_type`, `line/<line_num>/freq`, `line/<line_num>/offset_us`, `line/<line_num>/duty_cycle_percent`.  The definition is identical to the parameters of service `config_line`.
+
+`<line_num>` resides in 1,2,8~17.
+
+The params will not be created (and thus appear in `rosparam list`) until the line is explicitly configured either by setting the params or using `config_line` service.
+
+### Param `gps`
+
+There are 3 ROS param for GPRMC: `gps/baud`, `gps/inverted`, `gps/offset_us`.  The definition is identical to the parameters of service `config_gps`.
+
+### Param `triggering`
+
+The definition is identical to the parameter of service `toggle_trigger`.
+
+### Param `led`
+
+The definition is identical to the parameter of service `toggle_button_led`.
+
 ## Topics advertised
 
-### Topic `line/x` (in which `x` is the line index)
+### Topic `line/<line_num>`
 
-The exact `time` which Line `x` triggered (or is going to trigger) at is published through this topic.
+The exact `time` which Line `<line_num>` triggered (or is going to trigger) at is published through this topic.
 
-The messages are published every 1 second, not in real-time.
+The messages are published once every 1 second, not in real-time.
 
-`x` resides in 1,2,8~17.
+`<line_num>` resides in 1,2,8~17.
 
 ### Topic `button`
 

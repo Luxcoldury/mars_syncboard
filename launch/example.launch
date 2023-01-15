@@ -1,0 +1,9 @@
+<launch>
+
+  <node pkg="mars_syncboard" type="syncboard" name="syncboard" output="screen">
+
+    <rosparam file="$(find mars_syncboard)/launch/example.yml" command="load"/>
+
+  </node>
+
+</launch>
