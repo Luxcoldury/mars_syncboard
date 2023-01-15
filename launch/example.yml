@@ -1,0 +1,19 @@
+triggering: true
+line: 
+  "1": 
+    enabled: true
+    trigger_type: 0
+    freq: 30
+    offset_us: 0
+    duty_cycle_percent: 50
+  "2": 
+    enabled: true
+    trigger_type: 1
+    freq: 20
+    offset_us: 100
+    duty_cycle_percent: 50
+gps:
+  baud: 9600
+  offset_us: 1000000
+  inverted: false
+led: 2

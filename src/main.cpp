@@ -9,13 +9,24 @@
 #include <mars_syncboard_srvs/ToggleTrigger.h>
 #include <mars_syncboard_srvs/ToggleButtonLED.h>
 
+bool config_line_from_param();
+void update_line_config_param(int line_index);
+bool config_gps_from_param();
+void update_gps_config_param();
+bool config_trigger_from_param();
+void update_trigger_param();
+bool config_led_from_param();
+void update_led_param();
 bool config_line(mars_syncboard_srvs::ConfigLine::Request  &req, mars_syncboard_srvs::ConfigLine::Response &res);
 bool config_gps(mars_syncboard_srvs::ConfigGPRMC::Request  &req, mars_syncboard_srvs::ConfigGPRMC::Response &res);
+bool toggle_trigger(bool trigger);
 bool toggle_trigger(mars_syncboard_srvs::ToggleTrigger::Request  &req, mars_syncboard_srvs::ToggleTrigger::Response &res);
+bool toggle_button_led(int mode);
 bool toggle_button_led(mars_syncboard_srvs::ToggleButtonLED::Request  &req, mars_syncboard_srvs::ToggleButtonLED::Response &res);
 
 void button_callback(int gpio, int level, uint32_t tick);
 
+ros::NodeHandle *nh;
 ros::Publisher pub_btn;
 
 int wid_now, wid_next;
@@ -25,18 +36,18 @@ bool lines_triggering = false;
 int btn_led_mode = BTN_LED_ON;
 
 struct line_config sync_lines[GP_LINE_COUNT]={
-    {1,  GPIO_LINE_1,  false},
-    {2,  GPIO_LINE_2,  false},
-    {8,  GPIO_LINE_8,  false},
-    {9,  GPIO_LINE_9,  false},
-    {10, GPIO_LINE_10, false},
-    {11, GPIO_LINE_11, false},
-    {12, GPIO_LINE_12, false},
-    {13, GPIO_LINE_13, false},
-    {14, GPIO_LINE_14, false},
-    {15, GPIO_LINE_15, false},
-    {16, GPIO_LINE_16, false},
-    {17, GPIO_LINE_17, false}
+    {1,  GPIO_LINE_1 , false, 0, 10, 1, 0, 50},
+    {2,  GPIO_LINE_2 , false, 0, 10, 1, 0, 50},
+    {8,  GPIO_LINE_8 , false, 0, 10, 1, 0, 50},
+    {9,  GPIO_LINE_9 , false, 0, 10, 1, 0, 50},
+    {10, GPIO_LINE_10, false, 0, 10, 1, 0, 50},
+    {11, GPIO_LINE_11, false, 0, 10, 1, 0, 50},
+    {12, GPIO_LINE_12, false, 0, 10, 1, 0, 50},
+    {13, GPIO_LINE_13, false, 0, 10, 1, 0, 50},
+    {14, GPIO_LINE_14, false, 0, 10, 1, 0, 50},
+    {15, GPIO_LINE_15, false, 0, 10, 1, 0, 50},
+    {16, GPIO_LINE_16, false, 0, 10, 1, 0, 50},
+    {17, GPIO_LINE_17, false, 0, 10, 1, 0, 50}
 };
 
 struct gprmc_config gprmc_line={GPIO_LINE_GPS, 9600, 100*1000, false};
@@ -51,6 +62,7 @@ int main(int argc, char **argv)
     }
 
     ros::NodeHandle n("~");
+    nh=&n;
 
     ros::ServiceServer service_config_line = n.advertiseService("config_line", config_line);
     ros::ServiceServer service_config_gps = n.advertiseService("config_gps", config_gps);
@@ -71,6 +83,11 @@ int main(int argc, char **argv)
     {
         sleep(1);
     }
+
+    config_line_from_param();
+    config_gps_from_param();
+    config_trigger_from_param();
+    config_led_from_param();
 
     // Wait for T-1
     do {gpioTime(1, &sec_now, &micro_now);} while (micro_now > 500000);
@@ -121,12 +138,134 @@ int main(int argc, char **argv)
                 }
             }
         }
-        
+
+        config_line_from_param();
+        config_gps_from_param();
+        config_trigger_from_param();
+        config_led_from_param();
     }
 
     gpioWaveTxStop();
 
     return 0;
+}
+
+void update_line_config_param(int line_index){
+    std::string line_root = "line/"+std::to_string(sync_lines[line_index].num);
+    nh->setParam(line_root+"/enabled", sync_lines[line_index].enabled);
+    nh->setParam(line_root+"/trigger_type", sync_lines[line_index].trigger_type);
+    nh->setParam(line_root+"/freq", (double)sync_lines[line_index].freq/sync_lines[line_index].every_n_seconds);
+    nh->setParam(line_root+"/offset_us", (int)sync_lines[line_index].offset_us);
+    nh->setParam(line_root+"/duty_cycle_percent", sync_lines[line_index].duty_cycle_percent);
+}
+
+void update_gps_config_param(){
+    nh->setParam("gps/baud", (int)gprmc_line.baud);
+    nh->setParam("gps/offset", (int)gprmc_line.offset);
+    nh->setParam("gps/inverted", gprmc_line.inverted);
+}
+
+void update_trigger_param(){
+    nh->setParam("triggering", lines_triggering);
+}
+
+void update_led_param(){
+    nh->setParam("led", btn_led_mode);
+}
+
+bool config_line_from_param(){
+
+    for(int i=0;i<GP_LINE_COUNT;i++){
+        uint8_t line_num=sync_lines[i].num;
+        bool enabled;
+        int trigger_type;
+        double freq;
+        int offset_us;
+        int duty_cycle_percent;
+
+        std::string line_root = "line/"+std::to_string(line_num);
+
+        nh->param(line_root+"/enabled", enabled, sync_lines[i].enabled);
+        nh->param(line_root+"/trigger_type", trigger_type, sync_lines[i].trigger_type);
+        nh->param(line_root+"/freq", freq, (double)sync_lines[i].freq/sync_lines[i].every_n_seconds);
+        nh->param(line_root+"/offset_us", offset_us, (int)sync_lines[i].offset_us);
+        nh->param(line_root+"/duty_cycle_percent", duty_cycle_percent, sync_lines[i].duty_cycle_percent);
+
+        if(enabled==sync_lines[i].enabled &&
+           trigger_type==sync_lines[i].trigger_type &&
+           freq==(double)sync_lines[i].freq/sync_lines[i].every_n_seconds &&
+           offset_us==(int)sync_lines[i].offset_us &&
+           duty_cycle_percent==sync_lines[i].duty_cycle_percent
+        ) continue;
+
+        mars_syncboard_srvs::ConfigLine::Request req;
+        mars_syncboard_srvs::ConfigLine::Response res;
+
+        req.line_num=line_num;
+        req.enabled=enabled;
+        req.trigger_type=trigger_type;
+        req.freq=freq;
+        req.offset_us=offset_us;
+        req.duty_cycle_percent=duty_cycle_percent;
+
+        config_line(req,res);
+    }
+
+    return true;
+
+}
+
+bool config_gps_from_param(){
+    int baud;
+    int offset;
+    bool inverted;
+
+    nh->param("gps/baud", baud, (int)gprmc_line.baud);
+    nh->param("gps/offset", offset, (int)gprmc_line.offset);
+    nh->param("gps/inverted", inverted, gprmc_line.inverted);
+
+    if(baud==(int)gprmc_line.baud&&
+       offset==(int)gprmc_line.offset&&
+       inverted==gprmc_line.inverted)
+    {
+        update_gps_config_param();
+        return true;
+    }
+
+    mars_syncboard_srvs::ConfigGPRMC::Request  req;
+    mars_syncboard_srvs::ConfigGPRMC::Response res;
+
+    req.baud=baud;
+    req.offset_us=offset;
+    req.inverted=inverted;
+
+    config_gps(req,res);
+
+    return true;
+}
+
+bool config_trigger_from_param(){
+    bool triggering;
+    nh->param("triggering", triggering, lines_triggering);
+    if(triggering==lines_triggering){
+        update_trigger_param();
+        return true;
+    }
+
+    toggle_trigger(triggering);
+    return true;
+}
+
+bool config_led_from_param(){
+    int mode;
+    nh->param("led", mode, btn_led_mode);
+    if(mode==btn_led_mode){
+        update_led_param();
+        return true;
+    }
+
+    toggle_button_led(mode);
+    return true;
 }
 
 bool config_line(mars_syncboard_srvs::ConfigLine::Request  &req,
@@ -229,6 +368,7 @@ bool config_line(mars_syncboard_srvs::ConfigLine::Request  &req,
     res.succeeded = true;
     res.msg = res_msg;
     ROS_INFO("%s",res_msg.c_str());
+    update_line_config_param(line_index);
     return true;
 
     // On failure
@@ -236,27 +376,32 @@ bool config_line(mars_syncboard_srvs::ConfigLine::Request  &req,
         res.succeeded = false;
         res.msg = res_msg;
         ROS_ERROR("Line Config failed. %s", res_msg.c_str());
+        if(line_index>=0) update_line_config_param(line_index);
         return true;
 }
 
-bool toggle_trigger(mars_syncboard_srvs::ToggleTrigger::Request  &req,
-                    mars_syncboard_srvs::ToggleTrigger::Response &res)
-{
-    lines_triggering = req.start_trigger;
-    res.triggering = lines_triggering;
+bool toggle_trigger(bool trigger){
+    lines_triggering = trigger;
     if(lines_triggering){
         ROS_INFO("Triggering Started");
     }else{
         ROS_INFO("Triggering Stopped");
     }
+    update_trigger_param();
     return true;
 }
 
-bool toggle_button_led(mars_syncboard_srvs::ToggleButtonLED::Request  &req,
-                       mars_syncboard_srvs::ToggleButtonLED::Response &res)
+bool toggle_trigger(mars_syncboard_srvs::ToggleTrigger::Request  &req,
+                    mars_syncboard_srvs::ToggleTrigger::Response &res)
 {
-    btn_led_mode = req.mode;
-    res.mode = btn_led_mode;
+    toggle_trigger(req.start_trigger);
+    res.triggering = lines_triggering;
+    return true;
+}
+
+bool toggle_button_led(int mode)
+{
+    btn_led_mode = mode;
     switch(btn_led_mode){
         case BTN_LED_OFF:
             ROS_INFO("Button LED: OFF");
@@ -268,6 +413,15 @@ bool toggle_button_led(mars_syncboard_srvs::ToggleButtonLED::Request  &req,
             ROS_INFO("Button LED: BLINK at 1Hz");
             break;
     }
+    update_led_param();
+    return true;
+}
+
+bool toggle_button_led(mars_syncboard_srvs::ToggleButtonLED::Request  &req,
+                       mars_syncboard_srvs::ToggleButtonLED::Response &res)
+{
+    toggle_button_led(req.mode);
+    res.mode = btn_led_mode;
     return true;
 }
 
@@ -315,6 +469,7 @@ bool config_gps(mars_syncboard_srvs::ConfigGPRMC::Request  &req,
     res.succeeded = true;
     res.msg = res_msg;
     ROS_INFO("%s",res_msg.c_str());
+    update_gps_config_param();
     return true;
 
     // On failure
@@ -322,5 +477,6 @@ bool config_gps(mars_syncboard_srvs::ConfigGPRMC::Request  &req,
         res.succeeded = false;
         res.msg = res_msg;
         ROS_ERROR("GPS Config failed. %s", res_msg.c_str());
+        update_gps_config_param();
         return true;
 }
