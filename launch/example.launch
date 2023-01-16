@@ -6,4 +6,6 @@
 
   </node>
 
+  <node pkg="mars_syncboard" type="syncboard_button_assist" name="syncboard_button_assist"/>
+
 </launch>

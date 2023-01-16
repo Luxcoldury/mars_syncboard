@@ -151,3 +151,7 @@ The messages are published once every 1 second, not in real-time.
 ### Topic `button`
 
 `String` Message `Pressed` / `Released` will be published when the button is pressed / released.
+
+## Utility Node `syncboard_button_assist`
+
+The `syncboard_button_assist` node helps ultilize the button on the syncboard, turning on/off the triggering and let the LED to blink/stay-lit when the button is pushed. Rather than manipulating the configuration of the Syncboard hardware directly, it communicates with the `syncboard` node through ROS topic and params. Simply `rosrun mars_syncboard syncboard_button_assist` would work, even on a remote machine.
