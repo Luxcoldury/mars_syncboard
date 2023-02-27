@@ -34,7 +34,62 @@ Or if you prefer to use `roslaunch`.
 
 Then you can play with Syncboard by either calling the services or setting params.
 
-## Services advertised
+## Topics
+
+### Topic `line/<line_num>`
+
+The exact `time` which Line `<line_num>` triggered (or is going to trigger) at is published through this topic.
+
+The messages are published once every 1 second, not in real-time.
+
+`<line_num>` resides in 1,2,8~17.
+
+### Topic `button`
+
+`String` Message `Pressed` / `Released` will be published when the button is pressed / released.
+
+
+## Params
+
+ROS Params can be helpful if you want to monitor the triggering status of each line or to configure multiple lines all at once (e.g. in a launch file). However, it is NOT recommended to configure lines on the fly using `rosparam set` since it gives you no error message if your new combination of params doesn't make sense.
+
+Syncboard reads the params once per second and will try to configure the lines according to the params. No matter the configuration succeeded or not, Syncboard will then update the params to reflect the actually configuration of the line. Which means (1) if you want to alter more than one param, better set them at once using `rosparam load`, (2) if the new configuration doesn't make sense, old params will be restored, (3) even if the new configuration does make sense and be applied, the updated params (and the actual triggering setting) may not be identical to your inputs due to rounding.
+
+### Param `line/<line_num>`
+
+There are 5 ROS param for each line:
+
+* `line/<line_num>/enabled`
+* `line/<line_num>/trigger_type`
+* `line/<line_num>/freq`
+* `line/<line_num>/offset_us`
+* `line/<line_num>/duty_cycle_percent`
+
+`<line_num>` resides in 1,2,8~17.
+
+The definition is identical to the parameters of service [`config_line`](#service-config_line).
+
+The params will not be created (and thus appear in `rosparam list`) until the line is explicitly configured either by setting the params or using `config_line` service.
+
+### Param `gps`
+
+There are 3 ROS param for GPRMC:
+
+* `gps/baud`
+* `gps/inverted`
+* `gps/offset_us`
+
+The definition is identical to the parameters of service [`config_gps`](#service-config_gps).
+
+### Param `triggering`
+
+The definition is identical to the parameter of service [`toggle_trigger`](#service-toggle_trigger).
+
+### Param `led`
+
+The definition is identical to the parameter of service [`toggle_button_led`](#service-toggle_button_led).
+
+## Services
 
 ### Service `toggle_trigger`
 
@@ -111,46 +166,6 @@ uint8 mode
 ```
 
 * `uint8 mode` : `0` for off, `1` for always on, `2` for blinking every 1 second
-
-## Params advertised
-
-ROS Params can be helpful if you want to monitor the triggering status of each line or to configure multiple lines all at once (e.g. in a launch file). However, it is NOT recommended to configure lines on the fly using `rosparam set` since it gives you no error message if your new combination of params doesn't make sense.
-
-Syncboard reads the params once per second and will try to configure the lines according to the params. No matter the configuration succeeded or not, Syncboard will then update the params to reflect the actually configuration of the line. Which means (1) if you want to alter more than one param, better set them at once using `rosparam load`, (2) if the new configuration doesn't make sense, old params will be restored, (3) even if the new configuration does make sense and be applied, the updated params (and the actual triggering setting) may not be identical to your inputs due to rounding.
-
-### Param `line/<line_num>`
-
-There are 5 ROS param for each line: `line/<line_num>/enabled`, `line/<line_num>/trigger_type`, `line/<line_num>/freq`, `line/<line_num>/offset_us`, `line/<line_num>/duty_cycle_percent`.  The definition is identical to the parameters of service `config_line`.
-
-`<line_num>` resides in 1,2,8~17.
-
-The params will not be created (and thus appear in `rosparam list`) until the line is explicitly configured either by setting the params or using `config_line` service.
-
-### Param `gps`
-
-There are 3 ROS param for GPRMC: `gps/baud`, `gps/inverted`, `gps/offset_us`.  The definition is identical to the parameters of service `config_gps`.
-
-### Param `triggering`
-
-The definition is identical to the parameter of service `toggle_trigger`.
-
-### Param `led`
-
-The definition is identical to the parameter of service `toggle_button_led`.
-
-## Topics advertised
-
-### Topic `line/<line_num>`
-
-The exact `time` which Line `<line_num>` triggered (or is going to trigger) at is published through this topic.
-
-The messages are published once every 1 second, not in real-time.
-
-`<line_num>` resides in 1,2,8~17.
-
-### Topic `button`
-
-`String` Message `Pressed` / `Released` will be published when the button is pressed / released.
 
 ## Utility Node `syncboard_button_assist`
 
