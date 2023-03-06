@@ -122,7 +122,7 @@ int main(int argc, char **argv)
 
         sec_tn = sec_now;
         if (DEBUG_RT) printf("%d.%06d Sent\n\n", sec_now, micro_now);
-        ROS_INFO("Running, %s",lines_triggering ? "Triggering" : "Not Triggering");
+        ROS_INFO("Running, %s",lines_triggering ? "Triggering" : "IDLING");
 
         gpioWaveDelete(wid_now);
         wid_now = wid_next;
