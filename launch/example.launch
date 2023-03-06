@@ -2,7 +2,7 @@
 
   <node pkg="mars_syncboard" type="syncboard" name="syncboard" output="screen">
 
-    <rosparam file="$(find mars_syncboard)/launch/example.yml" command="load"/>
+    <rosparam file="$(find mars_syncboard)/config/example.yml" command="load"/>
 
   </node>
 
