@@ -2,7 +2,7 @@
 
 ## How to setup
 
-0. Get and build the service definition package [mars_syncboard_srvs](https://github.com/Luxcoldury/mars_syncboard_srvs)
+0. Get and build the message/service definition package [mars_syncboard_srvs](https://github.com/Luxcoldury/mars_syncboard_srvs)
 
 1. Clone this repo to `catkin_ws/src`
 
@@ -47,6 +47,12 @@ The messages are published once every 1 second, not in real-time.
 ### Topic `button`
 
 `String` Message `Pressed` / `Released` will be published when the button is pressed / released.
+
+### Topic `status`
+
+All the status info about syncboard. The `header.stamp` of this topic is set to the exact time of Syncboard.
+
+[mars_syncboard_srvs](https://github.com/Luxcoldury/mars_syncboard_srvs) is needed for parsing this topic status on a remote machine. See [BoardStatus](https://github.com/Luxcoldury/mars_syncboard_srvs/tree/master/msg/BoardStatus.msg) for defination.
 
 
 ## Params
