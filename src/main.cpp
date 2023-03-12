@@ -8,6 +8,9 @@
 #include <mars_syncboard_srvs/ConfigGPRMC.h>
 #include <mars_syncboard_srvs/ToggleTrigger.h>
 #include <mars_syncboard_srvs/ToggleButtonLED.h>
+#include <mars_syncboard_srvs/BoardStatus.h>
+#include <mars_syncboard_srvs/LineStatus.h>
+#include <mars_syncboard_srvs/GpsStatus.h>
 
 bool config_line_from_param();
 void update_line_config_param(int line_index);
@@ -68,7 +71,9 @@ int main(int argc, char **argv)
     ros::ServiceServer service_config_gps = n.advertiseService("config_gps", config_gps);
     ros::ServiceServer service_toggle_trigger = n.advertiseService("toggle_trigger", toggle_trigger);
     ros::ServiceServer service_toggle_button_led = n.advertiseService("toggle_button_led", toggle_button_led);
-    
+
+    ros::Publisher pub_status= n.advertise<mars_syncboard_srvs::BoardStatus>("status", 1000);
+
     std::vector<ros::Publisher> pub_lines;
     for(int i=0;i<GP_LINE_COUNT;i++){    
         ros::Publisher pub_line_tmp = n.advertise<std_msgs::Time>("line/"+std::to_string(sync_lines[i].num), 1100);
@@ -129,8 +134,26 @@ int main(int argc, char **argv)
 
         std_msgs::Time msg_line_tmp;
 
+        mars_syncboard_srvs::BoardStatus msg_board_status;
+
         for(int i=0;i<GP_LINE_COUNT;i++){
             if(lines_triggering&&sync_lines[i].enabled){
+
+                mars_syncboard_srvs::LineStatus msg_line_status_tmp;
+
+                msg_line_status_tmp.line_num = sync_lines[i].num;
+                msg_line_status_tmp.enabled = sync_lines[i].enabled;
+                msg_line_status_tmp.trigger_type = sync_lines[i].trigger_type;
+                if(sync_lines[i].every_n_seconds==1){
+                    msg_line_status_tmp.freq = sync_lines[i].freq;
+                }else{
+                    msg_line_status_tmp.freq = 1/sync_lines[i].every_n_seconds;
+                }
+                msg_line_status_tmp.offset_us = sync_lines[i].offset_us;
+                msg_line_status_tmp.duty_cycle_percent = sync_lines[i].duty_cycle_percent;
+
+                msg_board_status.lines[i]=msg_line_status_tmp;
+
                 for(int j=0;j<sync_lines[i].freq;j++){
                     uint32_t us = 1000000/sync_lines[i].freq*j+sync_lines[i].offset_us;
                     msg_line_tmp.data = ros::Time(sec_tn,1000*us);
@@ -138,6 +161,19 @@ int main(int argc, char **argv)
                 }
             }
         }
+
+        msg_board_status.header.stamp = ros::Time(sec_tn,0);
+        msg_board_status.header.frame_id = "syncboard";
+        msg_board_status.header.seq = sec_tn-sec_t0;
+
+        msg_board_status.gps.baud = gprmc_line.baud;
+        msg_board_status.gps.inverted = gprmc_line.inverted;
+        msg_board_status.gps.offset_us = gprmc_line.offset;
+
+        msg_board_status.triggering = lines_triggering;
+        msg_board_status.button_led = btn_led_mode;
+
+        pub_status.publish(msg_board_status);
 
         config_line_from_param();
         config_gps_from_param();
