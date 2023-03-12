@@ -129,7 +129,7 @@ string msg
 
 * `uint8 line_num` : The index of the line to be configured.
 * `bool enabled` : If it is `true`, the line will start triggering after `toggle_trigger true`
-* `uint8 trigger_type` : `0` for Rising edge, `1` for Falling edge, `2` for Either edge
+* `uint8 trigger_type` : `0` for Rising edge, `1` for Falling edge, `2` for Both edge
 * `float32 freq` : Frequency in Hz. Should be in (0,1000]. When the frequency is lesser than 1Hz, SyncBoard will try to trigger the line every $\lfloor 1/freq \rfloor$ seconds.
 * `uint32 offset_us` : Offset/delay of the signal, in microsecond ($10^{-6}$ second)
 * `uint8 duty_cycle_percent` : Duty cycle of the signal, in percentage. If `freq` is less than 1Hz, the width of the signal is `duty_cycle_percent`% of 1 second.
