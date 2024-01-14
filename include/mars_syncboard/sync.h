@@ -19,6 +19,8 @@
 #define GPIO_LINE_16        18
 #define GPIO_LINE_17        19
 
+#define LINE_KINECT         16
+
 #define GP_LINE_COUNT       12
 
 #define BTN_LED_OFF         0

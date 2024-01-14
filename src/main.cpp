@@ -39,18 +39,18 @@ bool lines_triggering = false;
 int btn_led_mode = BTN_LED_ON;
 
 struct line_config sync_lines[GP_LINE_COUNT]={
-    {1,  GPIO_LINE_1 , false, 0, 10, 1, 0, 50},
-    {2,  GPIO_LINE_2 , false, 0, 10, 1, 0, 50},
-    {8,  GPIO_LINE_8 , false, 0, 10, 1, 0, 50},
-    {9,  GPIO_LINE_9 , false, 0, 10, 1, 0, 50},
-    {10, GPIO_LINE_10, false, 0, 10, 1, 0, 50},
-    {11, GPIO_LINE_11, false, 0, 10, 1, 0, 50},
-    {12, GPIO_LINE_12, false, 0, 10, 1, 0, 50},
-    {13, GPIO_LINE_13, false, 0, 10, 1, 0, 50},
-    {14, GPIO_LINE_14, false, 0, 10, 1, 0, 50},
-    {15, GPIO_LINE_15, false, 0, 10, 1, 0, 50},
-    {16, GPIO_LINE_16, false, 0, 10, 1, 0, 50},
-    {17, GPIO_LINE_17, false, 0, 10, 1, 0, 50}
+    {1,  GPIO_LINE_1 , false, 0, 30, 1, 0, 50},
+    {2,  GPIO_LINE_2 , false, 0, 30, 1, 0, 50},
+    {8,  GPIO_LINE_8 , false, 0, 30, 1, 0, 50},
+    {9,  GPIO_LINE_9 , false, 0, 30, 1, 0, 50},
+    {10, GPIO_LINE_10, false, 0, 30, 1, 0, 50},
+    {11, GPIO_LINE_11, false, 0, 30, 1, 0, 50},
+    {12, GPIO_LINE_12, false, 0, 30, 1, 0, 50},
+    {13, GPIO_LINE_13, false, 0, 30, 1, 0, 50},
+    {14, GPIO_LINE_14, false, 0, 30, 1, 0, 50},
+    {15, GPIO_LINE_15, false, 0, 30, 1, 0, 50},
+    {16, GPIO_LINE_16, false, 0, 30, 1, 0, 50},
+    {17, GPIO_LINE_17, false, 0, 30, 1, 0, 50}
 };
 
 struct gprmc_config gprmc_line={GPIO_LINE_GPS, 9600, 100*1000, false};
@@ -137,7 +137,7 @@ int main(int argc, char **argv)
         mars_syncboard_srvs::BoardStatus msg_board_status;
 
         for(int i=0;i<GP_LINE_COUNT;i++){
-            if(lines_triggering&&sync_lines[i].enabled){
+            if(lines_triggering&&sync_lines[i].enabled || sync_lines[i].num==LINE_KINECT){
 
                 mars_syncboard_srvs::LineStatus msg_line_status_tmp;
 
