@@ -31,7 +31,7 @@ int gpioWavePrepare1sec(struct line_config sync_lines[], int line_count, struct 
     if(DEBUG_RT) printf("Preparing for %d\n",sec_to_prepare);
 
     for(int i=0;i<line_count;i++){
-        if(sync_lines[i].line_num == LINE_KINECT){
+        if(sync_lines[i].num == LINE_KINECT){
             gpioWaveAddFreq1sec(sync_lines[i]);
         }
         else if(lines_triggering && sync_lines[i].enabled && (sec_to_prepare - sec_t0) % sync_lines[i].every_n_seconds == 0){
