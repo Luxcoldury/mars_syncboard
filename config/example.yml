@@ -1,21 +1,27 @@
 triggering: true
 line: 
-  "1": 
-    enabled: true
-    trigger_type: 0
-    freq: 30
-    offset_us: 0
-    duty_cycle_percent: 50
   "2": 
     enabled: true
     trigger_type: 0
     freq: 30
     offset_us: 0
-    duty_cycle_percent: 20
+    duty_cycle_percent: 10
+  "15": 
+    enabled: true
+    trigger_type: 0
+    freq: 60
+    offset_us: 0
+    duty_cycle_percent: 10
+  "16": 
+    enabled: true
+    trigger_type: 0
+    freq: 30
+    offset_us: 0
+    duty_cycle_percent: 10
   "17":
     enabled: true
     trigger_type: 0
-    freq: 100
+    freq: 400
     offset_us: 0
     duty_cycle_percent: 20
 gps:
